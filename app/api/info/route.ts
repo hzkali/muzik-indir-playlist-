@@ -1,6 +1,11 @@
 import { execFile } from "node:child_process";
 import { NextRequest, NextResponse } from "next/server";
-import { YTDLP_ANTI_BOT_ARGS, getYtDlpPath, isAllowedYoutubeUrl } from "@/lib/ytdlp";
+import {
+  YTDLP_ANTI_BOT_ARGS,
+  getCookiesArgs,
+  getYtDlpPath,
+  isAllowedYoutubeUrl,
+} from "@/lib/ytdlp";
 
 export const runtime = "nodejs";
 export const maxDuration = 45;
@@ -46,6 +51,7 @@ function runYtDlpJson(url: string): Promise<YtDlpDump> {
         "--socket-timeout",
         "20",
         ...YTDLP_ANTI_BOT_ARGS,
+        ...getCookiesArgs(),
         url,
       ],
       { maxBuffer: 1024 * 1024 * 64, timeout: 40_000 },

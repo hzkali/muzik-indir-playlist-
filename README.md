@@ -35,8 +35,24 @@ npm run dev
 3. **Önemli — plan limitleri:** Vercel Hobby planında fonksiyon süresi varsayılan 10 sn'dir; uzun şarkılar/playlistler için `app/api/download/route.ts` ve `app/api/info/route.ts` içindeki `maxDuration` değerini plan limitinize göre ayarlayın (Hobby'de en fazla 60 sn'ye çıkarılabilir, Pro planda daha yüksek).
 4. Deploy sonrası ilk build'de `postinstall` scripti yt-dlp Linux binary'sini otomatik indirir; ekstra kurulum gerekmez.
 
+## "Sign in to confirm you're not a bot" hatası alırsanız
+
+YouTube, datacenter IP'lerden (Vercel'in sunucuları dahil) gelen istekleri zaman zaman bot olarak işaretleyip doğrulama isteyebilir. Uygulama bunu aşmak için varsayılan olarak `android`/`web` player client'larını dener (PO-token gerektirmeyen eski bir format kullanırlar), ama bu %100 garanti değildir — YouTube tarafını değiştirebilir.
+
+Hata tekrar ederse, gerçek bir YouTube oturumunu kanıt olarak geçebilirsiniz:
+
+1. Chrome/Edge'de bir tarayıcı eklentisi ile (ör. "Get cookies.txt LOCALLY") youtube.com'a giriş yapmış haldeyken cookies'lerinizi **Netscape formatında** `cookies.txt` olarak dışa aktarın.
+2. Bu dosyayı base64'e çevirin:
+   - PowerShell: `[Convert]::ToBase64String([IO.File]::ReadAllBytes("cookies.txt")) | Set-Clipboard`
+   - macOS/Linux: `base64 -w0 cookies.txt`
+3. Vercel projenizde **Settings → Environment Variables** kısmına `YTDLP_COOKIES_BASE64` adında yeni bir değişken ekleyin, değeri olarak bu base64 metnini yapıştırın, kaydedip yeniden deploy edin.
+4. `cookies.txt` dosyasını **asla** repoya commit etmeyin — sadece Vercel'in şifreli ortam değişkenlerinde tutulmalı. Ayrı/ikincil bir hesap kullanmanız, ana hesabınızın oturumunu paylaşmaktan daha güvenlidir.
+
+Ortam değişkeni tanımlı değilse uygulama cookie kullanmadan, sadece client fallback'iyle çalışmaya devam eder.
+
 ## Sınırlamalar
 
 - Klasör seçme özelliği (File System Access API) yalnızca Chromium tabanlı tarayıcılarda (Chrome, Edge) çalışır; Firefox/Safari'de dosyalar varsayılan indirilenler klasörüne düşer.
 - Çok uzun videolar/playlistler, Vercel'in fonksiyon süre limitine takılabilir.
+- YouTube'un bot tespiti datacenter IP'lerde daha agresiftir; nadiren bazı videolarda yukarıdaki cookie yöntemi gerekebilir.
 - Yalnızca üzerinde hak sahibi olduğunuz veya indirmeye izinli içerikler için kullanın; YouTube'un kullanım şartlarına ve telif haklarına uymak kullanıcının sorumluluğundadır.

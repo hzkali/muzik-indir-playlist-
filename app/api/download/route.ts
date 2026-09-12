@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   YTDLP_ANTI_BOT_ARGS,
   contentDispositionHeader,
+  getCookiesArgs,
   getFfmpegPath,
   getYtDlpPath,
   isValidVideoId,
@@ -37,6 +38,7 @@ function runYtDlpDownload(videoId: string, outputBase: string): Promise<string> 
         "--ffmpeg-location",
         getFfmpegPath(),
         ...YTDLP_ANTI_BOT_ARGS,
+        ...getCookiesArgs(),
         "-o",
         outputTemplate,
         url,

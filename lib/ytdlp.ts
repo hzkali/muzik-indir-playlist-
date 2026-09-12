@@ -1,3 +1,5 @@
+import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import ffmpegStatic from "ffmpeg-static";
 
@@ -23,6 +25,25 @@ export const YTDLP_ANTI_BOT_ARGS = [
   "--sleep-requests",
   "1",
 ];
+
+const COOKIES_PATH = path.join(os.tmpdir(), "yt-dlp-cookies.txt");
+
+// Datacenter IP'lerde client değişimi bile bot kontrolünü her zaman atlatamaz.
+// YTDLP_COOKIES_BASE64 ortam değişkeni (Netscape formatlı cookies.txt'nin
+// base64'ü) tanımlıysa, gerçek bir oturumu kanıt olarak yt-dlp'ye geçirir.
+// Değişken sadece Vercel'in ortam değişkenlerinde tutulur, repoya asla girmez.
+export function getCookiesArgs(): string[] {
+  const b64 = process.env.YTDLP_COOKIES_BASE64;
+  if (!b64) return [];
+  try {
+    if (!fs.existsSync(COOKIES_PATH)) {
+      fs.writeFileSync(COOKIES_PATH, Buffer.from(b64, "base64"));
+    }
+    return ["--cookies", COOKIES_PATH];
+  } catch {
+    return [];
+  }
+}
 
 const VIDEO_ID_RE = /^[a-zA-Z0-9_-]{11}$/;
 
