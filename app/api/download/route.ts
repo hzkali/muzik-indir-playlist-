@@ -6,6 +6,7 @@ import { randomUUID } from "node:crypto";
 import { Readable } from "node:stream";
 import { NextRequest, NextResponse } from "next/server";
 import {
+  YTDLP_ANTI_BOT_ARGS,
   contentDispositionHeader,
   getFfmpegPath,
   getYtDlpPath,
@@ -31,11 +32,11 @@ function runYtDlpDownload(videoId: string, outputBase: string): Promise<string> 
         "0",
         "--no-playlist",
         "--no-warnings",
-        "--no-call-home",
         "--socket-timeout",
         "20",
         "--ffmpeg-location",
         getFfmpegPath(),
+        ...YTDLP_ANTI_BOT_ARGS,
         "-o",
         outputTemplate,
         url,

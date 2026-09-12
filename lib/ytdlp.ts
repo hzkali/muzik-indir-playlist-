@@ -13,6 +13,17 @@ export function getFfmpegPath(): string {
   return ffmpegStatic as unknown as string;
 }
 
+// Datacenter IPs (Vercel dahil) YouTube'un "sign in to confirm you're not a
+// bot" kontrolüne daha sık takılır. "android" client'ı imzalama/PO-token
+// gerektirmeyen eski bir progressive format (itag 18) döndürdüğü için bu
+// kontrolü çoğunlukla atlatır; "web" ikinci client olarak denenir.
+export const YTDLP_ANTI_BOT_ARGS = [
+  "--extractor-args",
+  "youtube:player_client=android,web",
+  "--sleep-requests",
+  "1",
+];
+
 const VIDEO_ID_RE = /^[a-zA-Z0-9_-]{11}$/;
 
 export function isValidVideoId(id: string): boolean {
