@@ -1,36 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# YouTube MP3 İndirici
 
-## Getting Started
+YouTube video ve playlist bağlantılarını mp3 olarak indiren, Vercel'e deploy edilebilen bir Next.js uygulaması.
 
-First, run the development server:
+## Özellikler
+
+- Tek video veya playlist linki ile toplu ekleme
+- İndirilecek/indirilen şarkılar tek bir listede canlı durum (Bekliyor / İndiriliyor / Tamamlandı / Hata) ile gösterilir
+- Chrome/Edge'de **Klasör Seç** ile bilgisayarınızda seçtiğiniz klasöre doğrudan kayıt (File System Access API); desteklemeyen tarayıcılarda dosyalar varsayılan İndirilenler klasörüne iner
+- Sunucu tarafında yt-dlp (standalone binary, Python gerektirmez) + ffmpeg-static ile mp3'e dönüştürme
+
+## Nasıl çalışır (mimari notu)
+
+Vercel'de sunucu tarafında kalıcı/kişisel bir disk klasörüne yazma imkanı yoktur (serverless fonksiyonlar durumsuzdur). Bu yüzden "klasöre indirme" tamamen **tarayıcı tarafında** çözülür:
+
+1. `/api/info` — verilen URL için yt-dlp ile video/playlist bilgisini (başlık, süre, thumbnail) JSON olarak döner.
+2. `/api/download?id=...` — ilgili videoyu yt-dlp ile indirir, ffmpeg-static ile mp3'e çevirir ve sonucu tarayıcıya **stream** olarak yollar (`/tmp` üzerinde geçici dosya, stream bitince otomatik silinir).
+3. Tarayıcı, `showDirectoryPicker()` ile seçilen klasöre `pipeTo` kullanarak akışı doğrudan yazar; API desteklenmiyorsa normal dosya indirme (blob + `<a download>`) ile yedeklenir.
+
+## Yerel geliştirme
 
 ```bash
+npm install     # postinstall adımı yt-dlp binary'sini otomatik indirir (bin/ klasörüne)
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+`http://localhost:3000` adresini açın.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+> yt-dlp binary indirme başarısız olursa: `npm run fetch:yt-dlp`
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Vercel'e deploy
 
-## Learn More
+1. Bu repoyu GitHub'a push edin, Vercel'de "Import Project" ile bağlayın (framework otomatik Next.js olarak algılanır).
+2. Ekstra ortam değişkeni gerekmez.
+3. **Önemli — plan limitleri:** Vercel Hobby planında fonksiyon süresi varsayılan 10 sn'dir; uzun şarkılar/playlistler için `app/api/download/route.ts` ve `app/api/info/route.ts` içindeki `maxDuration` değerini plan limitinize göre ayarlayın (Hobby'de en fazla 60 sn'ye çıkarılabilir, Pro planda daha yüksek).
+4. Deploy sonrası ilk build'de `postinstall` scripti yt-dlp Linux binary'sini otomatik indirir; ekstra kurulum gerekmez.
 
-To learn more about Next.js, take a look at the following resources:
+## Sınırlamalar
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Klasör seçme özelliği (File System Access API) yalnızca Chromium tabanlı tarayıcılarda (Chrome, Edge) çalışır; Firefox/Safari'de dosyalar varsayılan indirilenler klasörüne düşer.
+- Çok uzun videolar/playlistler, Vercel'in fonksiyon süre limitine takılabilir.
+- Yalnızca üzerinde hak sahibi olduğunuz veya indirmeye izinli içerikler için kullanın; YouTube'un kullanım şartlarına ve telif haklarına uymak kullanıcının sorumluluğundadır.
